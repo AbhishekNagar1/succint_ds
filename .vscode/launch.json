@@ -1,0 +1,41 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Debug: Interactive Demo (main_demo)",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/main_demo",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build All (Make)"
+        },
+        {
+            "name": "Debug: Correctness Tests",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/correctness_tests",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build All (Make)"
+        },
+        {
+            "name": "Debug: FM-Index Demo",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/text_index_demo",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build All (Make)"
+        },
+        {
+            "name": "Debug: Benchmark Runner",
+            "type": "lldb",
+            "request": "launch",
+            "program": "${workspaceFolder}/bin/benchmark_runner",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build All (Make)"
+        }
+    ]
+}

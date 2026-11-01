@@ -1,0 +1,83 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Build All (Make)",
+            "type": "shell",
+            "command": "make",
+            "args": ["-j4"],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"]
+        },
+        {
+            "label": "1. Run Interactive Demo",
+            "type": "shell",
+            "command": "./bin/main_demo",
+            "dependsOn": "Build All (Make)",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            }
+        },
+        {
+            "label": "2. Run Correctness Test Suite",
+            "type": "shell",
+            "command": "./bin/correctness_tests",
+            "dependsOn": "Build All (Make)",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            }
+        },
+        {
+            "label": "3. Run FM-Index Text Search Demo",
+            "type": "shell",
+            "command": "./bin/text_index_demo",
+            "dependsOn": "Build All (Make)",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            }
+        },
+        {
+            "label": "4. Run Full Benchmarks",
+            "type": "shell",
+            "command": "./bin/benchmark_runner",
+            "dependsOn": "Build All (Make)",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            }
+        },
+        {
+            "label": "5. Generate Benchmark Plots",
+            "type": "shell",
+            "command": "MPLCONFIGDIR=/tmp/matplotlib .venv/bin/python3 scripts/plot_benchmarks.py",
+            "presentation": {
+                "reveal": "always",
+                "panel": "shared"
+            }
+        },
+        {
+            "label": "🚀 Run Everything (Master Pipeline)",
+            "type": "shell",
+            "command": "./scripts/run_all.sh",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new",
+                "focus": true
+            }
+        }
+    ]
+}
