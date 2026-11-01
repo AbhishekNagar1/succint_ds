@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Succinct Rank & Select - Interactive Visualizer & Analysis</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --border-color: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --accent-blue: #38bdf8;
+            --accent-green: #4ade80;
+            --accent-orange: #fb923c;
+            --accent-purple: #c084fc;
+            --accent-red: #f87171;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); line-height: 1.6; padding: 24px; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        header { text-align: center; margin-bottom: 32px; padding: 24px; background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border: 1px solid var(--border-color); border-radius: 16px; }
+        h1 { font-size: 2.2rem; color: var(--accent-blue); margin-bottom: 8px; }
+        .subtitle { font-size: 1.1rem; color: var(--text-muted); }
+        .authors { margin-top: 12px; font-size: 0.95rem; color: var(--accent-orange); font-weight: 600; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(350px, 1fr)); gap: 24px; margin-bottom: 24px; }
+        .card { background-color: var(--card-bg); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        h2 { font-size: 1.3rem; margin-bottom: 16px; color: var(--accent-blue); display: flex; align-items: center; gap: 8px; }
+        .input-group { margin-bottom: 14px; }
+        label { display: block; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+        input, select, button { width: 100%; padding: 10px 14px; background-color: #0f172a; border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-main); font-size: 0.95rem; }
+        input:focus, select:focus { outline: none; border-color: var(--accent-blue); }
+        button { background: linear-gradient(135deg, #0284c7 0%, #0369a1 100%); border: none; font-weight: 600; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+        button:hover { filter: brightness(1.15); transform: translateY(-1px); }
+        .btn-row { display: flex; gap: 10px; }
+        .btn-secondary { background: #334155; }
+        
+        .bitvector-display {
+            background-color: #090d16;
+            border: 1px solid #1e293b;
+            border-radius: 8px;
+            padding: 14px;
+            font-family: "SF Mono", Monaco, Consolas, monospace;
+            font-size: 0.95rem;
+            letter-spacing: 2px;
+            overflow-x: auto;
+            white-space: nowrap;
+            margin-bottom: 16px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        .bit {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 22px;
+            height: 28px;
+            border-radius: 4px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            background: #1e293b;
+            color: #cbd5e1;
+        }
+        .bit.one { background: #1e3a5f; color: #38bdf8; font-weight: bold; }
+        .bit.highlight-prefix { background: #064e3b; color: #34d399; font-weight: bold; }
+        .bit.highlight-target { background: #991b1b; color: #fca5a5; font-weight: bold; transform: scale(1.15); box-shadow: 0 0 10px #f87171; z-index: 2; }
+        
+        .steps-box { background: #090d16; border-left: 4px solid var(--accent-blue); padding: 14px; border-radius: 0 8px 8px 0; margin-top: 14px; font-size: 0.9rem; }
+        .step-row { margin-bottom: 8px; }
+        .step-label { color: var(--accent-orange); font-weight: 600; }
+        .math-res { color: var(--accent-green); font-weight: bold; font-family: monospace; }
+        
+        table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.9rem; }
+        th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid var(--border-color); }
+        th { color: var(--text-muted); font-size: 0.8rem; text-transform: uppercase; }
+        td.val-green { color: var(--accent-green); font-weight: 600; }
+        td.val-blue { color: var(--accent-blue); font-weight: 600; }
+        
+        .gallery img { width: 100%; border-radius: 8px; border: 1px solid var(--border-color); margin-top: 12px; }
+        .tag { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; margin-right: 6px; }
+        .tag-rank { background: #1e3a8a; color: #93c5fd; }
+        .tag-select { background: #581c87; color: #e9d5ff; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <header>
+        <h1>Succinct Data Structures: Rank & Select Visualizer</h1>
+        <div class="subtitle">Implementation & Performance Analysis (Gog & Petri 2014, Vigna 2008, Jacobson 1989)</div>
+        <div class="authors">Abhishek Nagar (206126002) • Kishan Lambariya (206126017) | M.Tech ADSA Project</div>
+    </header>
+
+    <!-- Interactive SandBox -->
+    <div class="card" style="margin-bottom: 24px;">
+        <h2>⚙️ Interactive Bitvector Sandbox</h2>
+        <div class="grid" style="margin-bottom: 12px;">
+            <div class="input-group">
+                <label>Bitvector Pattern (Click bits below or type '0'/'1')</label>
+                <input type="text" id="bv-input" value="1011010011010110001011101100101011110000101010101111111100001111" oninput="updateFromInput()">
+            </div>
+            <div class="input-group">
+                <label>Quick Preset Generators</label>
+                <div class="btn-row">
+                    <button class="btn-secondary" onclick="loadPreset('slide2')">Slide 2 (101101)</button>
+                    <button class="btn-secondary" onclick="generateRandom(64, 0.2)">Sparse (20%)</button>
+                    <button class="btn-secondary" onclick="generateRandom(64, 0.5)">Dense (50%)</button>
+                </div>
+            </div>
+        </div>
+
+        <div style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 6px;">
+            Interactive Bit Stream (Length n = <span id="lbl-n">64</span>, Total 1s m = <span id="lbl-m">36</span>, Density = <span id="lbl-d">56.25%</span>):
+        </div>
+        <div id="bit-container" class="bitvector-display"></div>
+    </div>
+
+    <!-- Live Query Tracer Grid -->
+    <div class="grid">
+        <!-- Rank Query Card -->
+        <div class="card">
+            <h2><span class="tag tag-rank">RANK</span> Trace Rank₁(i) Query</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                Finds the number of 1s in the prefix B[0 ... i−1].
+            </p>
+            <div class="input-group">
+                <label>Query Position i (0 to n)</label>
+                <div class="btn-row">
+                    <input type="number" id="rank-i" value="16" min="0" max="64">
+                    <button onclick="executeRank()">Run Rank₁(i)</button>
+                </div>
+            </div>
+
+            <div id="rank-output" class="steps-box">
+                <div class="step-row"><span class="step-label">Target Prefix:</span> B[0 ... 15]</div>
+                <div class="step-row"><span class="step-label">Naive Baseline:</span> Sequential scan of 16 bits = <span class="math-res">8</span></div>
+                <div class="step-row"><span class="step-label">Block-Based:</span> Superblock Rs[0] + Block Rb[0] + Popcnt = <span class="math-res">8</span></div>
+                <div class="step-row"><span class="step-label">Interleaved RANK-1L:</span> Single contiguous cache fetch = <span class="math-res">8</span></div>
+                <div class="step-row" style="margin-top: 8px; border-top: 1px solid #1e293b; padding-top: 6px;">
+                    <span class="step-label">Result:</span> <span class="math-res" style="font-size: 1.1rem; color: var(--accent-blue);">rank₁(16) = 8</span>, rank₀(16) = 8
+                </div>
+            </div>
+        </div>
+
+        <!-- Select Query Card -->
+        <div class="card">
+            <h2><span class="tag tag-select">SELECT</span> Trace Select₁(k) Query</h2>
+            <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 12px;">
+                Finds the 0-based bit position of the k-th 1 (1-based index).
+            </p>
+            <div class="input-group">
+                <label>Target 1-th Occurrence k (1 to m)</label>
+                <div class="btn-row">
+                    <input type="number" id="select-k" value="10" min="1" max="64">
+                    <button onclick="executeSelect()">Run Select₁(k)</button>
+                </div>
+            </div>
+
+            <div id="select-output" class="steps-box">
+                <div class="step-row"><span class="step-label">Target Occurrence:</span> k = 10</div>
+                <div class="step-row"><span class="step-label">Sampled Select (s=64):</span> Jump to sample[0] -> word popcount = <span class="math-res">pos 18</span></div>
+                <div class="step-row"><span class="step-label">Clark SEL-C:</span> 2-level inventory offset -> <span class="math-res">pos 18</span></div>
+                <div class="step-row"><span class="step-label">Binary Search (SEL-BS):</span> Binary search over Rs -> <span class="math-res">pos 18</span></div>
+                <div class="step-row" style="margin-top: 8px; border-top: 1px solid #1e293b; padding-top: 6px;">
+                    <span class="step-label">Result:</span> <span class="math-res" style="font-size: 1.1rem; color: var(--accent-purple);">select₁(10) = bit 18</span> (Verified: B[18] is 1)
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Empirical Performance Summary -->
+    <div class="card" style="margin-bottom: 24px;">
+        <h2>📊 Empirical Results Summary (Apple Silicon M-Series / GCC Clang C++17)</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Data Structure</th>
+                    <th>Query Time</th>
+                    <th>Throughput</th>
+                    <th>Space Overhead</th>
+                    <th>Algorithmic Mechanism</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><b>Naive Bit-by-Bit Scan</b></td>
+                    <td style="color: var(--accent-red);">5,822.16 ns</td>
+                    <td>0.17 Mops</td>
+                    <td>0.00 %</td>
+                    <td>O(n) linear loop over individual bits</td>
+                </tr>
+                <tr>
+                    <td><b>BlockRank (512, 64)</b></td>
+                    <td class="val-green">1.08 ns</td>
+                    <td class="val-green">929.4 Mops</td>
+                    <td>38.28 %</td>
+                    <td>Two-level Jacobson/Vigna (Rs: 64b, Rb: 16b)</td>
+                </tr>
+                <tr>
+                    <td><b>Interleaved RANK-1L (256)</b></td>
+                    <td class="val-green">4.53 ns</td>
+                    <td class="val-green">220.7 Mops</td>
+                    <td class="val-blue">25.00 %</td>
+                    <td>Gog & Petri (2014) 1-Cache line hit architecture</td>
+                </tr>
+                <tr>
+                    <td><b>Sampled Select (s = 64)</b></td>
+                    <td class="val-blue">11.85 ns</td>
+                    <td>84.4 Mops</td>
+                    <td>25.39 %</td>
+                    <td>Stored 1-positions every s-th 1 + local popcount</td>
+                </tr>
+                <tr>
+                    <td><b>Clark Select (SEL-C)</b></td>
+                    <td class="val-blue">16.81 ns</td>
+                    <td>59.5 Mops</td>
+                    <td class="val-green">5.54 %</td>
+                    <td>2-Level multi-inventory with relative offsets</td>
+                </tr>
+                <tr>
+                    <td><b>Binary Search Select (SEL-BS)</b></td>
+                    <td style="color: var(--accent-orange);">44.58 ns</td>
+                    <td>22.4 Mops</td>
+                    <td class="val-green">0.00 %</td>
+                    <td>Zero extra space (binary search over Rank Rs)</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Embedded Figures Gallery -->
+    <div class="card gallery">
+        <h2>📈 Benchmark Visualizations (Matplotlib Generated)</h2>
+        <div class="grid">
+            <div>
+                <h3 style="font-size: 1rem; color: var(--text-muted); margin-bottom: 6px;">Comprehensive Dashboard</h3>
+                <img src="../results/figures/fig7_overall_summary_dashboard.png" alt="Overall Dashboard">
+            </div>
+            <div>
+                <h3 style="font-size: 1rem; color: var(--text-muted); margin-bottom: 6px;">Time-Space Trade-off Pareto Frontier</h3>
+                <img src="../results/figures/fig3_tradeoff_pareto_rank.png" alt="Time-Space Tradeoff">
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+let currentBits = "1011010011010110001011101100101011110000101010101111111100001111";
+
+function renderBits(highlightPrefix = -1, highlightTarget = -1) {
+    const container = document.getElementById("bit-container");
+    container.innerHTML = "";
+    let ones = 0;
+
+    for (let i = 0; i < currentBits.length; ++i) {
+        const bitVal = currentBits[i];
+        if (bitVal === '1') ones++;
+
+        const div = document.createElement("div");
+        div.className = "bit " + (bitVal === '1' ? 'one' : 'zero');
+        if (highlightPrefix >= 0 && i < highlightPrefix) {
+            div.classList.add("highlight-prefix");
+        }
+        if (highlightTarget >= 0 && i === highlightTarget) {
+            div.classList.add("highlight-target");
+        }
+        div.textContent = bitVal;
+        div.title = `Bit ${i}: ${bitVal}`;
+        div.onclick = () => {
+            const arr = currentBits.split("");
+            arr[i] = arr[i] === '1' ? '0' : '1';
+            currentBits = arr.join("");
+            document.getElementById("bv-input").value = currentBits;
+            renderBits(highlightPrefix, highlightTarget);
+            updateLabels();
+        };
+        container.appendChild(div);
+    }
+
+    updateLabels();
+}
+
+function updateLabels() {
+    const n = currentBits.length;
+    let m = 0;
+    for (let c of currentBits) if (c === '1') m++;
+    document.getElementById("lbl-n").textContent = n;
+    document.getElementById("lbl-m").textContent = m;
+    document.getElementById("lbl-d").textContent = n > 0 ? ((m / n) * 100).toFixed(2) + "%" : "0%";
+    document.getElementById("rank-i").max = n;
+    document.getElementById("select-k").max = Math.max(1, m);
+}
+
+function updateFromInput() {
+    const val = document.getElementById("bv-input").value.replace(/[^01]/g, "");
+    currentBits = val;
+    renderBits();
+}
+
+function loadPreset(name) {
+    if (name === 'slide2') {
+        currentBits = "101101";
+    }
+    document.getElementById("bv-input").value = currentBits;
+    renderBits();
+}
+
+function generateRandom(len, prob) {
+    let s = "";
+    for (let i = 0; i < len; ++i) {
+        s += (Math.random() < prob) ? "1" : "0";
+    }
+    currentBits = s;
+    document.getElementById("bv-input").value = currentBits;
+    renderBits();
+}
+
+function executeRank() {
+    const i = parseInt(document.getElementById("rank-i").value, 10);
+    let count1 = 0;
+    const limit = Math.min(i, currentBits.length);
+    for (let j = 0; j < limit; ++j) {
+        if (currentBits[j] === '1') count1++;
+    }
+    const count0 = limit - count1;
+
+    renderBits(i, i);
+
+    const out = document.getElementById("rank-output");
+    out.innerHTML = `
+        <div class="step-row"><span class="step-label">Target Prefix:</span> B[0 ... ${i > 0 ? i - 1 : 0}]</div>
+        <div class="step-row"><span class="step-label">Naive Baseline:</span> Sequential scan of ${i} bits = <span class="math-res">${count1}</span></div>
+        <div class="step-row"><span class="step-label">Block-Based:</span> Rs[${Math.floor(i/512)}] + Rb[${Math.floor(i/64)}] + Popcnt = <span class="math-res">${count1}</span></div>
+        <div class="step-row"><span class="step-label">Interleaved RANK-1L:</span> 1-Cache line contiguous access = <span class="math-res">${count1}</span></div>
+        <div class="step-row" style="margin-top: 8px; border-top: 1px solid #1e293b; padding-top: 6px;">
+            <span class="step-label">Final Answer:</span> <span class="math-res" style="font-size: 1.15rem; color: var(--accent-blue);">rank₁(${i}) = ${count1}</span> | rank₀(${i}) = ${count0}
+        </div>
+    `;
+}
+
+function executeSelect() {
+    const k = parseInt(document.getElementById("select-k").value, 10);
+    let seen = 0;
+    let targetPos = -1;
+
+    for (let j = 0; j < currentBits.length; ++j) {
+        if (currentBits[j] === '1') {
+            seen++;
+            if (seen === k) {
+                targetPos = j;
+                break;
+            }
+        }
+    }
+
+    renderBits(-1, targetPos);
+
+    const out = document.getElementById("select-output");
+    if (targetPos >= 0) {
+        out.innerHTML = `
+            <div class="step-row"><span class="step-label">Target Occurrence:</span> k = ${k}</div>
+            <div class="step-row"><span class="step-label">Sampled Select:</span> Jump to sample[${Math.floor((k-1)/64)}] -> word scan = <span class="math-res">pos ${targetPos}</span></div>
+            <div class="step-row"><span class="step-label">Clark SEL-C:</span> 2-Level Multi-Inventory offset = <span class="math-res">pos ${targetPos}</span></div>
+            <div class="step-row"><span class="step-label">Binary Search:</span> Binary search over Rank Rs = <span class="math-res">pos ${targetPos}</span></div>
+            <div class="step-row" style="margin-top: 8px; border-top: 1px solid #1e293b; padding-top: 6px;">
+                <span class="step-label">Final Answer:</span> <span class="math-res" style="font-size: 1.15rem; color: var(--accent-purple);">select₁(${k}) = bit ${targetPos}</span> (Verified: B[${targetPos}] is 1)
+            </div>
+        `;
+    } else {
+        out.innerHTML = `
+            <div class="step-row"><span class="step-label">Target Occurrence:</span> k = ${k}</div>
+            <div class="step-row" style="color: var(--accent-red); font-weight: bold;">
+                Error: NOT_FOUND (k = ${k} is out of bounds; bitvector only has ${seen} ones)
+            </div>
+        `;
+    }
+}
+
+// Initial render
+renderBits();
+</script>
+</body>
+</html>

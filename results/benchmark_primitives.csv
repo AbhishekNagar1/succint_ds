@@ -1,0 +1,7 @@
+operation,method,latency_ns,throughput_mops
+popcount,TBL,0.919979,1086.98
+popcount,BW,0.281858,3547.88
+popcount,BLT,0.287704,3475.79
+select64,TBL,2.11895,471.932
+select64,BW,1.53194,652.766
+select64,BLT,1.45495,687.311

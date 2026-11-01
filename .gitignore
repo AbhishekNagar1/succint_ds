@@ -1,0 +1,15 @@
+# Build and binary artifacts
+bin/
+*.o
+*.dSYM/
+build/
+
+# Python virtual environment and caches
+.venv/
+__pycache__/
+*.py[cod]
+.matplotlib/
+
+# OS metadata
+.DS_Store
+Thumbs.db

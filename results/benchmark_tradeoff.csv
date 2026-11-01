@@ -1,0 +1,11 @@
+type,parameter_name,parameter_value,latency_ns,overhead_pct
+Rank,BlockSize,128,3.34433,50
+Rank,BlockSize,256,4.52467,25
+Rank,BlockSize,512,5.33492,12.5
+Rank,BlockSize,1024,7.08375,6.25
+Select,SampleInterval,16,6.63525,199.995
+Select,SampleInterval,32,9.00142,100.002
+Select,SampleInterval,64,9.21933,50.0046
+Select,SampleInterval,128,11.9689,25.0061
+Select,SampleInterval,256,13.5917,12.5069
+Select,SampleInterval,512,15.9233,6.25725
